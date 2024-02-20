@@ -44,9 +44,9 @@ const createUser = (req, res, next) => {
     });
 };
 const updateInfo = (req, res, next) => {
-  const { name, about } = req.body;
+  const { name, email } = req.body;
 
-  return User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  return User.findByIdAndUpdate(req.user._id, { name, email }, { new: true, runValidators: true })
     .orFail(() => {
       throw new NotFoundError('Пользователь с указанным _id не найден');
     })
@@ -56,6 +56,8 @@ const updateInfo = (req, res, next) => {
     .catch((error) => {
       if (error.name === 'ValidationError' || error.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
+      } if (error.code === 11000) {
+        next(new ConflictError('Этот email уже зарегистрирован'));
       } else {
         next(error);
       }
